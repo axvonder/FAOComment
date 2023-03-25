@@ -1,5 +1,5 @@
 #setwd and load packages
-setwd("~/Documents/GitHub/FAOComment/Data")
+setwd("~/Desktop//Data")
 library(tidyverse)
 library(dplyr)
 library(tidyr)
@@ -9,169 +9,76 @@ library(blandr)
 library(readxl)
 library(reshape)
 library(readr)
+library(cowplot)
+library(scales)
+library(gridExtra)
+library(grid)
+library(png)
 
 
 
-# Define the function
-transfunc <- function(file_path, catname) {
-  # Read CSV file
-  old <- read_csv(file_path)
-  
-  # Keep only the specified columns
-  old <- old %>% select(Area, Item, Year, Value)
-  
-  # Reshape the data from wide to long format
-  data <- reshape(old, idvar = "Area", timevar = "Year", direction = "wide")
-  
-  # Add a new variable
-  old_long$category <- rep(catname, nrow(old_long))
-  
-  # Return the modified dataset
-  return(old_long)
-}
-
-# Use the function
-file_path <- "old vegetables.csv"
-catname <- "vegetables"
-modified_data <- transfunc(file_path, catname)
-
-
-
-# Define the function
-transfunc <- function(file_path) {
+# function to read in data
+transfunc <- function(file_path, catname, col_prefix) {
   # Read CSV file
   data <- read_csv(file_path)
-  data <- data[ , which(names(data) %in% c("Area", "Item.Code", "Item", "Year", "Value"))]
-  data <- reshape(data, idvar = "Area", timevar = "Year", direction = "wide")
-  names(data)[names(data) == 'Value.2010'] <- '2010data'
-  names(data)[names(data) == 'Value.2011'] <- '2011data'
-  names(data)[names(data) == 'Value.2012'] <- '2012data'
-  names(data)[names(data) == 'Value.2013'] <- '2013data'
-  names(data)[names(data) == 'Item.2010'] <- 'Item'
-  data <- data[ , -which(names(data) %in% c("Item.2011", "Item.2012", "Item.2013"))]
-  # Add a new variable, e.g., random values between 0 and 1
-  data$category <- rep(catname, nrow(data))
+  # Keep only the specified columns
+  data <- data %>% select(Area, Item, Year, Value)
+  # Reshape the data from wide to long format
+  data_long = data %>% 
+    spread(Year, Value)
   
+  # Change the column names to old/new to prepare for merge
+  old_names <- c("2010", "2011", "2012", "2013")
+  new_names <- paste0("Y", old_names, col_prefix)
+  for (i in 1:length(old_names)) {
+    names(data_long)[names(data_long) == old_names[i]] <- new_names[i]
+  }
+  
+  # Add a new variable
+  data_long$category <- rep(catname, nrow(data_long))
   # Return the modified dataset
-  return(data)
+  return(data_long)
 }
 
-# Use the function
-file_path <- "old vegetables.csv"
-catname <- "vegetables"
-ZZdat <- transfunc(file_path)
+# Define the file paths and category names
+file_base <- c("vegetables", "alcoholic beverages", "animal fats",
+               "aquatic products, other", "cereals - excluding beer", "eggs",
+               "fish, seafood", "fruits - excluding wine", "meat",
+               "milk - excluding butter", "miscellaneous", "offals",
+               "oilcrops", "pulses", "spices", "starchy roots",
+               "stimulants", "sugar & sweeteners", "sugar crops",
+               "treenuts", "vegetable oils")
 
+old_file_paths <- paste0("old ", file_base, ".csv")
+new_file_paths <- paste0("new ", file_base, ".csv")
+catnames <- file_base
 
+# Initialize an empty data frame to store the modified datasets
+combined_modified_data <- data.frame()
 
-
-
-
-
-
-#read in data
-dataX <- "old eggs.csv"
-catname <- "eggs"
-
-X <- "old eggs.csv"
-Y <- "eggs"
-
-Xform <- function(dataX, catname) {
-  old <- read.csv(dataX)
-  old <- old[ , which(names(old) %in% c("Area", "Item.Code", "Item", "Year", "Value"))]
-  old <- reshape(old, idvar = "Area", timevar = "Year", direction = "wide")
-  names(old)[names(old) == 'Value.2010'] <- '2010old'
-  names(old)[names(old) == 'Value.2011'] <- '2011old'
-  names(old)[names(old) == 'Value.2012'] <- '2012old'
-  names(old)[names(old) == 'Value.2013'] <- '2013old'
-  names(old)[names(old) == 'Item.2010'] <- 'Item'
-  old <- old[ , -which(names(old) %in% c("Item.2011", "Item.2012", "Item.2013"))]
-  old$category <- catname
+# Loop through the datasets and apply the transfunc function
+for (i in 1:length(old_file_paths)) {
+  old_data <- transfunc(old_file_paths[i], catnames[i], "old")
+  new_data <- transfunc(new_file_paths[i], catnames[i], "new")
+  
+  # Merge old and new datasets for each category
+  merged_data <- full_join(old_data, new_data, by = c("Area", "Item", "category"))
+  
+  # Combine the merged datasets
+  combined_modified_data <- rbind(combined_modified_data, merged_data)
 }
 
-Xform(dataX, catname)
-Xform("old eggs.csv", "eggs")
-Xform(X,Y)
+dat <- combined_modified_data
+#identify items that contain an NA value
+test1 <- dat[rowSums(is.na(dat)) > 0,] #2,257
+#delete NA items
+final <- dat[(complete.cases(dat)), ]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ALL ITEMS WITHOUT AGGREGATED CATEGORIES
-#read in data
-old <- read.csv('oldallitemsnoag.csv')
-new <- read.csv('newallitemsnoag.csv')
-#keep only variables needed for analysis
-old <- old[ , which(names(old) %in% c("Area", "Item.Code", "Item", "Year", "Value"))]
-new <- new[ , which(names(new) %in% c("Area", "Item.Code", "Item", "Year", "Value"))]
-#trasform dataset to wide (from long)
-old <- old %>%
-  spread(Year, Value)
-new <- new %>%
-  spread(Year, Value)
-#rename columns (to prepare for merge)
-colnames(old) <- c("Area", "Item", "Y2010old", "Y2011old", "Y2012old", "Y2013old")
-colnames(new) <- c("Area", "Item", "Y2010new", "Y2011new", "Y2012new", "Y2013new")
-#merge datasets
-joined <- left_join(new, old, by = c("Area", "Item"))
-#identify items not included
-joined <- joined %>%
-  mutate(oldna = case_when(
-    is.na(Y2010old) & is.na(Y2011old) & is.na(Y2012old) & is.na(Y2013old) ~ 1,
-    TRUE ~ 0
-    ))
-#items that do not exist in the old dataset, but exist in the new dataset
-test <- joined[(joined$oldna == 1), ] #1,452
-#all items that contain an NA value (mainly Serbia? For missing 2 years of data it seems)
-test1 <- joined[rowSums(is.na(joined)) > 0,] #1,539
-#delete old dataset all-NA items (these items exist only in the new dataset)
-final <- joined[(complete.cases(joined)), ]
-final <- final[ , -which(names(final) %in% c("oldna"))]
 dat <- final
 #create variable that avgs all old dataset values per item
 dat$oldfoodavg = ((dat$Y2010old + dat$Y2011old + dat$Y2012old + dat$Y2013old)/4)
 #create variable that avgs all new dataset values per item
 dat$newfoodavg = ((dat$Y2010new + dat$Y2011new + dat$Y2012new + dat$Y2013new)/4)
-#turn NAs to zeros (to allow for addition when some years are missing
 ##create variable that calculates absolute difference between items
 dat$avg <- (dat$newfoodavg + dat$oldfoodavg)/2
 dat$diff <- dat$oldfoodavg - dat$newfoodavg
@@ -197,38 +104,6 @@ table(dat$nochange)
 
 
 
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    nochange = mean(nochange, na.rm=T))
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    largechange = mean(largechange, na.rm=T))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #ITEM CATEGORIES
 #read in data
@@ -247,19 +122,10 @@ colnames(old) <- c("Area", "Item", "Y2010old", "Y2011old", "Y2012old", "Y2013old
 colnames(new) <- c("Area", "Item", "Y2010new", "Y2011new", "Y2012new", "Y2013new")
 #merge datasets
 joined <- left_join(new, old, by = c("Area", "Item"))
-#identify items not included
-joined <- joined %>%
-  mutate(oldna = case_when(
-    is.na(Y2010old) & is.na(Y2011old) & is.na(Y2012old) & is.na(Y2013old) ~ 1,
-    TRUE ~ 0
-  ))
-#items that do not exist in the old dataset, but exist in the new dataset
-test <- joined[(joined$oldna == 1), ] #1,452
 #all items that contain an NA value (mainly Serbia? For missing 2 years of data it seems)
-test1 <- joined[rowSums(is.na(joined)) > 0,] #1,539
+test1 <- joined[rowSums(is.na(joined)) > 0,] #178
 #delete old dataset all-NA items (these items exist only in the new dataset)
 final <- joined[(complete.cases(joined)), ]
-final <- final[ , -which(names(final) %in% c("oldna"))]
 datcat <- final
 #create variable that avgs all old dataset values per item
 datcat$oldfoodavg = ((datcat$Y2010old + datcat$Y2011old + datcat$Y2012old + datcat$Y2013old)/4)
@@ -289,14 +155,309 @@ table(datcat$nochange)
 
 
 
+#combining datasets -- prepare harmonization by adding a category variable 
+datcat$category <- datcat$Item
+
+# Add the 'isag' variable to both datasets to label whether or not the item is
+#an individual item or if it's an aggregated category item
+dat <- dat %>%
+  mutate(isag = 0)
+datcat <- datcat %>%
+  mutate(isag = 1)
+# Convert the 'category' variable in 'datcat' to lowercase
+datcat <- datcat %>%
+  mutate(category = tolower(category))
+# Merge the two datasets
+merged_data <- bind_rows(dat, datcat)
+#just a wee check to see if there are any NA values [there should be none])
+num_NAs <- sum(is.na(merged_data))
+
+
+#add population
+# Read the datasets
+newpop <- read.csv("newpop.csv")
+oldpop <- read.csv("oldpop.csv")
+pop <- read.csv("2020pop.csv")
+# Select the specified columns
+newpop <- newpop %>% select(Area, Item, Year, Value)
+oldpop <- oldpop %>% select(Area, Item, Year, Value)
+pop <- pop %>% select(Area, Item, Year, Value)
+oldpop <- oldpop %>%
+  spread(Year, Value)
+newpop <- newpop %>%
+  spread(Year, Value)
+pop <- pop %>%
+  spread(Year, Value) %>%
+  select(-Item) %>%
+  dplyr::rename(population = `2020`)
+oldpop <- oldpop %>%
+  select(-Item) %>%
+  mutate(oldpopavg = (oldpop$`2010` + oldpop$`2011` + oldpop$`2012` + oldpop$`2013`) / 4) %>%
+  select(-`2010`,-`2011`,-`2012`,-`2013`)
+newpop <- newpop %>%
+  select(-Item) %>%
+  mutate(newpopavg = (newpop$`2010` + newpop$`2011` + newpop$`2012` + newpop$`2013`) / 4) %>%
+  select(-`2010`,-`2011`,-`2012`,-`2013`)
+
+mergedfinal <- bind_rows(merged_data, pop, oldpop, newpop)
+mergedfinal <- mergedfinal %>%
+  #group by ID
+  group_by(Area) %>%
+  arrange(Area) %>%
+  fill(population, oldpopavg, newpopavg) %>%
+  fill(population, oldpopavg, newpopavg, .direction = "up") %>%
+  filter(!is.na(Item))
+
+dat <- mergedfinal
+
+# Split the dataset
+dat_isag0 <- dat[dat$isag == 0, ]
+dat_isag1 <- dat[dat$isag == 1, ]
+
+
+
+
+
+#################FIGURE 1 ###########################
+
+
+# Create separate plots
+plot_isag0 <- ggplot(dat_isag0, aes(x = avg, y = diff)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) - (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) + (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  ylab("Difference of new & old method (kg/capita/yr)") +
+  xlab("Mean of new & old method (kg/capita/yr)") +
+  xlim(0, 375) +
+  ylim(-130, 200) +
+  theme_classic() +
+  ggtitle("individual items")
+
+plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) - (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) + (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  ylab("Difference of new & old method (kg/capita/yr)") +
+  xlab("Mean of new & old method (kg/capita/yr)") +
+  xlim(0, 375) +
+  ylim(-130, 200) +
+  theme_classic() +
+  ggtitle("aggregated item categories")
+
+# Combine the plots side by side
+combined_plot <- plot_grid(plot_isag0, plot_isag1, ncol = 2)
+
+# Print the combined plot
+print(combined_plot)
+
+#stats
+summary(blandr.statistics( dat_isag0$oldfoodavg , dat_isag0$newfoodavg ))
+summary(blandr.statistics( dat_isag1$oldfoodavg , dat_isag1$newfoodavg ))
+
+mean(dat_isag0$absdiff)
+mean(dat_isag1$absdiff)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Create separate plots with wider width
+plot_isag0 <- ggplot(dat_isag0, aes(x = avg, y = diff)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) - (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) + (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  ylab("Difference of new & old method (kg/capita/yr)") +
+  xlab("Mean of new & old method (kg/capita/yr)") +
+  xlim(0, 375) +
+  ylim(-130, 200) +
+  theme_classic() +
+  ggtitle("Individual items")
+
+plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) - (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) + (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
+  ylab("Difference of new & old method (kg/capita/yr)") +
+  xlab("Mean of new & old method (kg/capita/yr)") +
+  xlim(0, 375) +
+  ylim(-130, 200) +
+  theme_classic() +
+  ggtitle("Aggregated item categories")
+
+# Set the width for the saved plot
+width <- 5
+
+# Save each plot separately
+ggsave("plot_isag0.png", plot = plot_isag0, width = width, height = 5, dpi = 300)
+ggsave("plot_isag1.png", plot = plot_isag1, width = width, height = 5, dpi = 300)
+
+# Combine the saved plots side by side
+plot_isag0 <- rasterGrob(readPNG("plot_isag0.png"), interpolate = TRUE)
+plot_isag1 <- rasterGrob(readPNG("plot_isag1.png"), interpolate = TRUE)
+combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
+
+# Print the combined plot
+print(combined_plot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################### FIGURE 2 ######################
+
+
+
+
+
+test <- dat_isag1 %>%
+  group_by(Item) %>%
+  summarise(
+    n = n(),
+    meandiff = mean(absdiff, na.rm=T),
+    avgwt = mean((oldfoodavg + newfoodavg)/2, na.rm=T)) 
+
+# Reorder the items from largest to smallest meandiff
+test$Item <- with(test, reorder(Item, -meandiff))
+
+# Create the scatterplot with point size based on avgwt
+plot <- ggplot(test, aes(x = Item, y = meandiff, color = Item, size = avgwt)) +
+  geom_point() +
+  geom_hline(yintercept = 5.6, linetype = "dashed", color = "black") +
+  annotate("text", x = length(unique(test$Item)), y = 5.6, label = "mean abs. difference", vjust = -0.5, hjust = 1, size = 4) +
+  labs(y = "Abs. diff. between methods (kg/capita/yr)", size = "Avg. Weight*") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(), legend.position = "none") +
+  scale_size_continuous(range = c(2, 8), 
+                        breaks = c(30, 90, 200),
+                        labels = c("<30", "90", "≥200"))
+
+# Add x-axis labels below plot
+x_labels <- paste(test$Item, collapse = " | ")
+plot <- plot + labs(x = NULL) +
+  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"),
+        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, vjust = 1),
+        axis.title.x = element_blank(),
+        axis.line.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        plot.margin = unit(c(1, 1, 2, 3), "lines")) # Adjust the bottom margin
+
+# Add the x-axis label using annotate()
+plot <- plot + annotate("text", x = length(unique(test$Item))/2, y = -3.5, label = "Aggregated food categories", size = 4)
+
+# Display the plot
+print(plot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############SANDBOX, come back to this later maybe##########
+
+
+
+
+
+
+
+
+
+
+
 
 #comparisons by country (across all item categories)
-test <- datcat %>%
+test <- dat_isag1 %>%
   group_by(Area) %>%
   summarise(
     n = n(),
     meandiff = mean(absdiff, na.rm=T))
-test <- datcat %>%
+
+mean(dat_isag0$absdiff)
+mean(dat_isag1$absdiff)
+
+
+test <- dat_isag1 %>%
+  group_by(Item) %>%
+  summarise(
+    n = n(),
+    meandiff = mean(absdiff, na.rm=T))
+
+cor(dat_isag1$absdiff,dat_isag1$Area)
+
+test <- dat_isag0 %>%
+  group_by(Item) %>%
+  summarise(
+    n = n(),
+    meandiff = mean(absdiff, na.rm=T))
+
+
+test <- dat %>%
+  group_by(Area) %>%
+  summarise(
+    n = n(),
+    meandiff = mean(absdiff, na.rm=T))
+test <- dat %>%
+  group_by(Area) %>%
+  summarise(
+    n = n(),
+    nochange = mean(nochange, na.rm=T))
+test <- dat %>%
+  group_by(Area) %>%
+  summarise(
+    n = n(),
+    largechange = mean(largechange, na.rm=T))test <- datcat %>%
   group_by(Area) %>%
   summarise(
     n = n(),
