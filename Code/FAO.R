@@ -14,6 +14,7 @@ library(scales)
 library(gridExtra)
 library(grid)
 library(png)
+library(ggridges)
 
 
 
@@ -394,12 +395,258 @@ print(plot)
 
 
 
+#########################FIGURE 3 ################################
+
+
+# Subset the data to only include the desired countries
+desired_countries <- c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland")
+data_subset <- dat_isag0[data$Area %in% desired_countries, ]
+
+# Rename the countries as requested
+data_subset$Area[data_subset$Area == "China, mainland"] <- "China"
+data_subset$Area[data_subset$Area == "United Arab Emirates"] <- "UAE"
+
+# Define the categories to plot
+categories <- c("Milk - Excluding Butter", "Cereals - Excluding Beer", "Fruits - Excluding Wine", "Sugar & Sweeteners", "Vegetables", "Meat")
+
+# Set up the plot grid
+par(mfrow = c(2, 3))
+
+# Loop through each category and create the boxplot for each country
+for (category in categories) {
+  # Create a data frame with only the current category
+  category_data <- data_subset[data_subset$category == category, ]
+  
+  # Loop through each country and create the boxplot for oldfoodavg and newfoodavg
+  for (country in desired_countries) {
+    # Create a data frame with only the current country
+    country_data <- category_data[category_data$Area == country, ]
+    
+    # Remove any missing or invalid values from the data
+    country_data <- na.omit(country_data)
+    
+    # Check if there is any data left to plot
+    if (nrow(country_data) > 0) {
+      # Create the boxplot for oldfoodavg and newfoodavg
+      boxplot(country_data$oldfoodavg, country_data$newfoodavg, 
+              names = c("Old", "New"), 
+              main = paste(country, "-", category), 
+              xlab = "Food Type", 
+              ylab = "Average Consumption")
+    }
+  }
+}
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Filter the dataset based on the specified countries and food categories
+filtered_data <- dat_isag1 %>%
+  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
+           Item %in% c("Milk - Excluding Butter", "Cereals - Excluding Beer", "Fruits - Excluding Wine", "Sugar & Sweeteners", "Vegetables", "Meat"))
+
+# Update the Area column to replace "United Arab Emirates" with "UAE" and "China, mainland" with "China"
+filtered_data$Area <- gsub("United Arab Emirates", "UAE", filtered_data$Area)
+filtered_data$Area <- gsub("China, mainland", "China", filtered_data$Area)
+
+# Reshape the dataset from wide to long format
+long_data <- filtered_data %>%
+  gather(key = "Method", value = "Value", c(oldfoodavg, newfoodavg))
+
+# Create the grid of box plots
+grid_box_plot <- ggplot(long_data, aes(x = Area, y = Value, fill = Method)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  facet_wrap(~ Item, ncol = 1, scales = "free_y") +
+  labs(title = "Box plots of oldfoodavg and newfoodavg by country and food category",
+       x = "Country",
+       y = "Value",
+       fill = "Method") +
+  theme_minimal()
+
+# Display the grid of box plots
+print(grid_box_plot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Filter the dataset based on the specified countries and food categories
+filtered_data <- dat_isag1 %>%
+  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
+           Item %in% c("Milk - Excluding Butter", "Cereals - Excluding Beer", "Fruits - Excluding Wine", "Sugar & Sweeteners", "Vegetable", "Meat"))
+
+# Update the Area column to replace "United Arab Emirates" with "UAE" and "China, mainland" with "China"
+filtered_data$Area <- gsub("United Arab Emirates", "UAE", filtered_data$Area)
+filtered_data$Area <- gsub("China, mainland", "China", filtered_data$Area)
+
+# Change "Vegetable" to "Vegetables"
+filtered_data$Item <- gsub("Vegetable", "Vegetables", filtered_data$Item)
+
+# Reshape the dataset from wide to long format
+long_data <- filtered_data %>%
+  gather(key = "Method", value = "Value", c(oldfoodavg, newfoodavg))
+
+# Define custom colors
+custom_colors <- c("red", "orange", "yellow", "green", "blue", "pink")
+light_colors <- scales::alpha(custom_colors, 0.6)
+dark_colors <- scales::alpha(custom_colors, 1)
+
+# Create a custom color mapping
+color_mapping <- data.frame(Area = unique(filtered_data$Area),
+                            LightColor = light_colors,
+                            DarkColor = dark_colors)
+
+# Add custom color mapping to the long_data
+long_data <- merge(long_data, color_mapping, by = "Area")
+
+# Create the grid of box plots
+grid_box_plot <- ggplot(long_data, aes(x = Area, y = Value, fill = Method)) +
+  geom_boxplot(aes(fill = ifelse(Method == "newfoodavg", LightColor, DarkColor)), position = position_dodge(width = 0.8), show.legend = FALSE, color = "black") +
+  facet_wrap(~ Item, ncol = 1, scales = "free_y") +
+  labs(title = "Box plots of oldfoodavg and newfoodavg by country and food category",
+       x = "Country",
+       y = "Value") +
+  scale_fill_identity() +
+  theme_minimal()
+
+# Display the grid of box plots
+print(grid_box_plot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Filter the dataset based on the specified countries and food categories
+filtered_data <- dat_isag1 %>%
+  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
+           Item %in% c("Milk - Excluding Butter", "Cereals - Excluding Beer", "Fruits - Excluding Wine", "Sugar & Sweeteners", "Vegetables", "Meat"))
+
+# Update the Area column to replace "United Arab Emirates" with "UAE" and "China, mainland" with "China"
+filtered_data$Area <- gsub("United Arab Emirates", "UAE", filtered_data$Area)
+filtered_data$Area <- gsub("China, mainland", "China", filtered_data$Area)
+
+# Reshape the dataset from wide to long format
+long_data <- filtered_data %>%
+  gather(key = "Method", value = "Value", c(oldfoodavg, newfoodavg))
+
+# Define custom colors
+custom_colors <- c("red", "orange", "yellow", "green", "blue", "pink")
+light_colors <- scales::alpha(custom_colors, 0.2)
+dark_colors <- scales::alpha(custom_colors, 1)
+
+# Add custom color mapping to the long_data
+long_data <- merge(long_data, color_mapping, by = "Area")
+
+# Create the grid of scatter plots
+grid_scatter_plot <- ggplot(long_data, aes(x = Area, y = Value, color = Method)) +
+  geom_point(aes(color = ifelse(Method == "newfoodavg", LightColor, DarkColor)), position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.8), show.legend = FALSE) +
+  facet_wrap(~ Item, ncol = 1, scales = "free_y") +
+  labs(title = "Scatter plots of oldfoodavg and newfoodavg by country and food category",
+       x = "Country",
+       y = "Value") +
+  scale_color_identity() +
+  theme_minimal()
+
+# Display the grid of scatter plots
+print(grid_scatter_plot)
 
 
 
