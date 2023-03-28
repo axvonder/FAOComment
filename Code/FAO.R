@@ -402,63 +402,6 @@ print(plot)
 
 
 
-# Subset the dataset to the specified countries and categories
-dat_isag0_sub <- dat_isag0 %>%
-  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
-           category %in% c("milk - excluding butter", "cereals - excluding beer", "fruits - excluding wine",
-                           "sugar & sweeteners", "vegetables", "meat")) %>%
-  mutate(Area = recode(Area, "United Arab Emirates" = "UAE", "China, mainland" = "China"))
-
-# Create a new dataset to visualize the boxplots side by side
-dat_isag0_melt <- dat_isag0_sub %>%
-  pivot_longer(cols = c("oldfoodavg", "newfoodavg"), names_to = "type", values_to = "value")
-
-# Define colors for each country
-country_colors <- c("UAE" = "#FF0000", "Norway" = "#FFA500", "Canada" = "#FFFF00",
-                    "Rwanda" = "#008000", "Germany" = "#0000FF", "China" = "#4B0082")
-
-# Define light and dark colors for oldfoodavg and newfoodavg
-oldfoodavg_colors <- paste0(country_colors, "B3")
-newfoodavg_colors <- paste0(country_colors, "66")
-
-# Create the boxplot
-plot <- ggplot(dat_isag0_melt, aes(x = Area, y = value, fill = interaction(Area, type))) +
-  geom_boxplot(position = position_dodge(0.8)) +
-  facet_wrap(~category, scales = "free", ncol = 2) +
-  scale_fill_manual(values = c(oldfoodavg_colors, newfoodavg_colors)) +
-  labs(x = "Country", y = "Value") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Print the plot
-print(plot)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#####################FIGURE 4###########################
-
-
 #define percentage 
 dat_isag0 <- dat_isag0 %>%
   #grouping by country
@@ -528,7 +471,7 @@ ggplot(dat_long, aes(x = Area, y = value, fill = variable)) +
 
 
 ## Filter the dataset to include only the desired countries
-dat_filtered <- dat_isag0[dat_isag0$Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland"),]
+dat_filtered <- dat_isag0[dat_isag0$Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland", "Bangladesh", "Hungary"),]
 
 # Rename China, mainland and United Arab Emirates to China and UAE, respectively
 dat_filtered$Area <- gsub("China, mainland", "China", dat_filtered$Area)
@@ -548,15 +491,92 @@ variable_alpha <- c("nochangeperc" = 0.5, "largechangeperc" = 1)
 
 ggplot(dat_long, aes(x = Area, y = value, fill = Area, alpha = variable)) +
   geom_bar(stat = "identity", position = "stack") +
-  scale_fill_manual(values = country_colors) +
-  scale_alpha_manual(values = variable_alpha) +
+  scale_fill_manual(name = "Country", values = country_colors) +
+  scale_alpha_manual(name = "Fill", values = variable_alpha, labels = c("Items with no change", "Items with a large change")) +
   theme_classic() +
-  xlab("") +
-  ylab("Percentage (%)") +
-  ggtitle("Split Bar Chart Plot") +
+  xlab("Country") +
+  ylab("Percentage of total items (%)") +
+  ggtitle("") +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_y_continuous(limits = c(0, 100), expand = c(0, 0), breaks = seq(0, 100, 20), labels = paste0(seq(0, 100, 20), "%"))
+
+
+
+
+test <- dat_isag0 %>%
+  group_by(Area) %>%
+  summarise(
+    n = n(),
+    nochange = mean(nochangeperc, na.rm=T))
+test1 <- dat_isag0 %>%
+  group_by(Area) %>%
+  summarise(
+    n = n(),
+    largechange = mean(largechangeperc, na.rm=T))
+
+
+
+
+
+
+
+
+
+
+
+
+################POTENTIAL FUTURE FIGURE, BUT NEEDS SOME WORK###################
+
+# Subset the dataset to the specified countries and categories
+dat_isag0_sub <- dat_isag0 %>%
+  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
+           category %in% c("milk - excluding butter", "cereals - excluding beer", "fruits - excluding wine",
+                           "sugar & sweeteners", "vegetables", "meat")) %>%
+  mutate(Area = recode(Area, "United Arab Emirates" = "UAE", "China, mainland" = "China"))
+
+# Create a new dataset to visualize the boxplots side by side
+dat_isag0_melt <- dat_isag0_sub %>%
+  pivot_longer(cols = c("oldfoodavg", "newfoodavg"), names_to = "type", values_to = "value")
+
+# Define colors for each country
+country_colors <- c("UAE" = "#FF0000", "Norway" = "#FFA500", "Canada" = "#FFFF00",
+                    "Rwanda" = "#008000", "Germany" = "#0000FF", "China" = "#4B0082")
+
+# Define light and dark colors for oldfoodavg and newfoodavg
+oldfoodavg_colors <- paste0(country_colors, "B3")
+newfoodavg_colors <- paste0(country_colors, "66")
+
+# Create the boxplot
+plot <- ggplot(dat_isag0_melt, aes(x = Area, y = value, fill = interaction(Area, type))) +
+  geom_boxplot(position = position_dodge(0.8)) +
+  facet_wrap(~category, scales = "free", ncol = 2) +
+  scale_fill_manual(values = c(oldfoodavg_colors, newfoodavg_colors)) +
+  labs(x = "Country", y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Print the plot
+print(plot)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -675,7 +695,8 @@ test <- dat %>%
   group_by(Area) %>%
   summarise(
     n = n(),
-    largechange = mean(largechange, na.rm=T))test <- datcat %>%
+    largechange = mean(largechange, na.rm=T))
+test <- datcat %>%
   group_by(Area) %>%
   summarise(
     n = n(),
