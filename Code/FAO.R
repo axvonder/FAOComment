@@ -17,6 +17,7 @@ library(png)
 library(ggridges)
 library(ggpattern)
 library(RColorBrewer)
+library(patchwork)
 
 
 
@@ -224,80 +225,31 @@ dat_isag1 <- dat[dat$isag == 1, ]
 #################FIGURE 1 ###########################
 
 
-# Create separate plots
 plot_isag0 <- ggplot(dat_isag0, aes(x = avg, y = diff)) +
   geom_point(alpha = 0.25, size = 1) +
   geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
   geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) - (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
   geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) + (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
+  ylab("Diff. of new & old method (kg/capita/yr)") +
   xlab("Mean of new & old method (kg/capita/yr)") +
   xlim(0, 375) +
   ylim(-130, 200) +
   theme_classic() +
-  ggtitle("individual items")
+  ggtitle("Individual items") +
+  theme(text = element_text(family = "Avenir"))
 
 plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
   geom_point(alpha = 0.25, size = 1) +
   geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
   geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) - (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
   geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) + (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
+  ylab("Diff. of new & old method (kg/capita/yr)") +
   xlab("Mean of new & old method (kg/capita/yr)") +
   xlim(0, 375) +
   ylim(-130, 200) +
   theme_classic() +
-  ggtitle("aggregated item categories")
-
-# Combine the plots side by side
-combined_plot <- plot_grid(plot_isag0, plot_isag1, ncol = 2)
-
-# Print the combined plot
-print(combined_plot)
-
-#stats
-summary(blandr.statistics( dat_isag0$oldfoodavg , dat_isag0$newfoodavg ))
-summary(blandr.statistics( dat_isag1$oldfoodavg , dat_isag1$newfoodavg ))
-
-mean(dat_isag0$absdiff)
-mean(dat_isag1$absdiff)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Create separate plots with wider width
-plot_isag0 <- ggplot(dat_isag0, aes(x = avg, y = diff)) +
-  geom_point(alpha = 0.25, size = 1) +
-  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) - (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat_isag0$diff, na.rm = TRUE) + (1.96 * sd(dat_isag0$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
-  xlab("Mean of new & old method (kg/capita/yr)") +
-  xlim(0, 375) +
-  ylim(-130, 200) +
-  theme_classic() +
-  ggtitle("Individual items")
-
-plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
-  geom_point(alpha = 0.25, size = 1) +
-  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) - (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat_isag1$diff, na.rm = TRUE) + (1.96 * sd(dat_isag1$diff, na.rm = TRUE)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
-  xlab("Mean of new & old method (kg/capita/yr)") +
-  xlim(0, 375) +
-  ylim(-130, 200) +
-  theme_classic() +
-  ggtitle("Aggregated item categories")
+  ggtitle("Aggregated item categories") +
+  theme(text = element_text(family = "Avenir"))
 
 # Set the width for the saved plot
 width <- 5
@@ -314,6 +266,8 @@ combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
 # Print the combined plot
 print(combined_plot)
 
+# Save the plot to a folder on your Desktop called "FAO"
+ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 8, dpi = 300)
 
 
 
@@ -349,58 +303,55 @@ test <- dat_isag1 %>%
     meandiff = mean(absdiff, na.rm=T),
     avgwt = mean((oldfoodavg + newfoodavg)/2, na.rm=T)) 
 
+
 # Reorder the items from largest to smallest meandiff
 test$Item <- with(test, reorder(Item, -meandiff))
 
 # Create the scatterplot with point size based on avgwt
-plot <- ggplot(test, aes(x = Item, y = meandiff, color = Item, size = avgwt)) +
-  geom_point() +
+plot <- ggplot(test, aes(x = Item, y = meandiff, size = avgwt)) +
+  geom_point(color = "#C6DBEF") +
   geom_hline(yintercept = 5.6, linetype = "dashed", color = "black") +
-  annotate("text", x = length(unique(test$Item)), y = 5.6, label = "mean abs. difference", vjust = -0.5, hjust = 1, size = 4) +
-  labs(y = "Abs. diff. between methods (kg/capita/yr)", size = "Avg. Weight*") +
-  theme_minimal() +
-  theme(axis.text.x = element_blank(), legend.position = "none") +
-  scale_size_continuous(range = c(2, 8), 
-                        breaks = c(30, 90, 200),
-                        labels = c("<30", "90", "≥200"))
+  annotate("text", x = length(unique(test$Item)), y = 5.6, label = "mean abs. diff. (5.6 kg)", vjust = -0.5, hjust = 1, size = 4, family = "Avenir") +
+  labs(y = "Abs. diff. between methods (kg/capita/yr)", size = "Avg. Weight*", family = "Avenir") +
+  theme_classic() +
+  theme(axis.text.x = element_blank(), legend.position = "right", text = element_text(family = "Avenir")) +
+  scale_size_continuous(range = c(2, 12), 
+                        breaks = c(25, 50, 75),
+                        labels = c("<25kg", "50kg", ">75kg"), 
+                        name = "Avg. Weight*", 
+                        guide = guide_legend(title.position = "top", label.position = "left", title.hjust = 0.5, title.vjust = -0.2)) +
+  guides(size = guide_legend(override.aes = list(color = "#C6DBEF", shape = 16), keywidth = 1.5, keyheight = 1.5)) # Override default shape and color of the legend
 
 # Add x-axis labels below plot
 x_labels <- paste(test$Item, collapse = " | ")
 plot <- plot + labs(x = NULL) +
-  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold"),
-        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, vjust = 1),
+  theme(plot.title = element_text(hjust = 0, size = 12, face = "bold", family = "Avenir"),
+        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, vjust = 1, family = "Avenir"),
         axis.title.x = element_blank(),
         axis.line.x = element_blank(),
         axis.ticks.x = element_blank(),
-        plot.margin = unit(c(1, 1, 2, 3), "lines")) # Adjust the bottom margin
+        plot.margin = unit(c(1, 1, 2, 3), "lines"), 
+        text = element_text(family = "Avenir")) # Adjust the bottom margin
 
-# Add the x-axis label using annotate()
-plot <- plot + annotate("text", x = length(unique(test$Item))/2, y = -3.5, label = "Aggregated food categories", size = 4)
+# Create a blank plot for the x-axis label
+label_plot <- ggdraw() + draw_label("Aggregated food categories", size = 10, x = 0.5, hjust = 0.5) +
+  theme(plot.margin = margin(t = 0, r = 0, b = 75, l = 0, unit = "pt"))
+
+# Combine the plots using cowplot
+plot1 <- plot_grid(plot, label_plot, nrow = 2, rel_heights = c(0.9, 0.1))
+
 
 # Display the plot
-print(plot)
+print(plot1)
 
-
-
-
-
-
-
-
-
-
-
-
-
+# Save the plot to a folder on your Desktop called "FAO"
+ggsave("~/Desktop/FAO/Figure 2 - Ag. food cats diff plot.png", plot1, width = 10, height = 8, dpi = 300)
 
 
 
 
 
 #########################FIGURE 3 ################################
-
-
-
 
 #define percentage 
 dat_isag0 <- dat_isag0 %>%
@@ -422,27 +373,8 @@ dat_isag0 <- dat_isag0 %>%
   mutate(largechangeperc = largechangetot/totalitems)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Filter the dataset to include only the desired countries
-dat_filtered <- dat_isag0[dat_isag0$Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland"),]
+dat_filtered <- dat_isag0[dat_isag0$Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland", "Bangladesh", "Hungary"),]
 
 # Rename China, mainland and United Arab Emirates to China and UAE, respectively
 dat_filtered$Area <- gsub("China, mainland", "China", dat_filtered$Area)
@@ -451,19 +383,67 @@ dat_filtered$Area <- gsub("United Arab Emirates", "UAE", dat_filtered$Area)
 # Reshape the data into a long format
 dat_long <- dat_filtered %>% pivot_longer(cols = c("nochangeperc", "largechangeperc"), names_to = "variable", values_to = "value")
 
-ggplot(dat_long, aes(x = Area, y = value, fill = variable)) +
-  geom_bar(stat = "identity", position = "stack") +
-  scale_fill_manual(values = c("#56B4E9", "#E69F00"), labels = c("No Change", "Large Change")) +
-  theme_minimal() +
-  xlab("") +
-  ylab("Percentage (%)") +
-  ggtitle("Split Bar Chart Plot") +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  scale_y_continuous(limits = c(0, 100), expand = c(0, 0), breaks = seq(0, 100, 20), labels = paste0(seq(0, 100, 20), "%"))
+# Split the data into two separate data frames
+dat_nochange <- dat_long %>% filter(variable == "nochangeperc")
+dat_largechange <- dat_long %>% filter(variable == "largechangeperc")
+
+
+# Remove the first color from the "Blues" palette (it was too light, it wasn't really showing up, but i like the rest of the colors :])
+palette <- brewer.pal(n = length(unique(dat_long$Area)) + 1, name = "Blues")[-1]
+# Assign a color from the modified palette to each country
+country_colors <- setNames(palette, unique(dat_long$Area))
+
+
+plot1 <- ggplot(dat_nochange, aes(x = Area, y = value, fill = Area)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = country_colors) +
+  theme_classic() +
+  xlab("Country") +
+  ylab("Percentage of total items") +
+  ggtitle("No change") +
+  theme(plot.title = element_text(hjust = 0, family = "Avenir", size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
+        legend.position = "none",
+        text = element_text(family = "Avenir", size = 10)) +
+  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format()) +
+  geom_hline(yintercept = 0.224, linetype = "dashed", color = "black") +
+  annotate("text", x = Inf, y = 0.224, label = "mean % (22.4)", hjust = 4.1, vjust = -0.5, family = "Avenir", size = 3, color = "black")
+
+plot2 <- ggplot(dat_largechange, aes(x = Area, y = value, fill = Area)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(name = "Country", values = country_colors) +
+  theme_classic() +
+  xlab("Country") +
+  ylab("Percentage of total items") +
+  ggtitle("Large change (>3.65kg/capita/yr)") +
+  theme(plot.title = element_text(hjust = 0, family = "Avenir", size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
+        text = element_text(family = "Avenir", size = 10)) +
+  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format()) +
+  geom_hline(yintercept = 0.069, linetype = "dashed", color = "black") +
+  annotate("text", x = Inf, y = 0.069, label = "mean % (6.9)", hjust =3.5, vjust = -0.5, family = "Avenir", size = 3, color = "black")
+
+
+# Combine the plots using the patchwork package
+plot1 + plot2
+plot <- plot1 + plot2
+
+
+# Save the plot to a folder on your Desktop called "FAO"
+ggsave("~/Desktop/FAO/Figure 3 - no change & large change items by country.png", plot, width = 10, height = 8, dpi = 300)
 
 
 
 
+
+
+
+
+
+
+
+
+################POTENTIAL FUTURE PLOTS, BUT NEED SOME WORK###################
 
 
 
@@ -480,40 +460,45 @@ dat_filtered$Area <- gsub("United Arab Emirates", "UAE", dat_filtered$Area)
 # Reshape the data into a long format
 dat_long <- dat_filtered %>% pivot_longer(cols = c("nochangeperc", "largechangeperc"), names_to = "variable", values_to = "value")
 
-# Create a color palette
-palette <- brewer.pal(n = length(unique(dat_long$Area)), name = "Spectral")
+# Split the data into two separate data frames
+dat_nochange <- dat_long %>% filter(variable == "nochangeperc")
+dat_largechange <- dat_long %>% filter(variable == "largechangeperc")
 
-# Assign colors from the palette to each country
+# Create the color palette
+palette <- brewer.pal(n = length(unique(dat_long$Area)), name = "Blues")
 country_colors <- setNames(palette, unique(dat_long$Area))
 
-# Set the alpha values for each variable
-variable_alpha <- c("nochangeperc" = 0.5, "largechangeperc" = 1)
-
-ggplot(dat_long, aes(x = Area, y = value, fill = Area, alpha = variable)) +
-  geom_bar(stat = "identity", position = "stack") +
-  scale_fill_manual(name = "Country", values = country_colors) +
-  scale_alpha_manual(name = "Fill", values = variable_alpha, labels = c("Items with no change", "Items with a large change")) +
+plot1 <- ggplot(dat_nochange, aes(x = Area, y = value, fill = Area)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = country_colors) +
   theme_classic() +
   xlab("Country") +
-  ylab("Percentage of total items (%)") +
-  ggtitle("") +
-  theme(plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_y_continuous(limits = c(0, 100), expand = c(0, 0), breaks = seq(0, 100, 20), labels = paste0(seq(0, 100, 20), "%"))
+  ylab("Percentage of total items") +
+  ggtitle("No change") +
+  theme(plot.title = element_text(hjust = 0, family = "Avenir", size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
+        legend.position = "none",
+        text = element_text(family = "Avenir", size = 10)) +
+  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format())
+
+plot2 <- ggplot(dat_largechange, aes(x = Area, y = value, fill = Area)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(name = "Country", values = country_colors) +
+  theme_classic() +
+  xlab("Country") +
+  ylab("Percentage of total items") +
+  ggtitle("Large change (>3.65kg/capita/yr)") +
+  theme(plot.title = element_text(hjust = 0.5, family = "Avenir", size = 12),
+        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
+        text = element_text(family = "Avenir", size = 10)) +
+  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format())
+
+# Combine the plots using the patchwork package
+plot1 + plot2
 
 
 
 
-test <- dat_isag0 %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    nochange = mean(nochangeperc, na.rm=T))
-test1 <- dat_isag0 %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    largechange = mean(largechangeperc, na.rm=T))
 
 
 
@@ -526,7 +511,8 @@ test1 <- dat_isag0 %>%
 
 
 
-################POTENTIAL FUTURE FIGURE, BUT NEEDS SOME WORK###################
+
+
 
 # Subset the dataset to the specified countries and categories
 dat_isag0_sub <- dat_isag0 %>%
