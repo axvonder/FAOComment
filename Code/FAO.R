@@ -1,5 +1,5 @@
 #setwd and load packages
-setwd("~/Desktop//Data")
+setwd("~/Desktop/Data")
 library(tidyverse)
 library(dplyr)
 library(tidyr)
@@ -19,6 +19,7 @@ library(ggpattern)
 library(RColorBrewer)
 library(patchwork)
 library(tibble)
+library(BlandAltmanLeh)
 
 
 
@@ -271,7 +272,7 @@ print(combined_plot)
 ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 8, dpi = 300)
 
 
-
+blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
 
 
 
@@ -334,9 +335,11 @@ plot <- plot + labs(x = NULL) +
         plot.margin = unit(c(1, 1, 2, 3), "lines"), 
         text = element_text(family = "Avenir")) # Adjust the bottom margin
 
-# Create a blank plot for the x-axis label
-label_plot <- ggdraw() + draw_label("Aggregated food categories", size = 10, x = 0.5, hjust = 0.5) +
-  theme(plot.margin = margin(t = 0, r = 0, b = 75, l = 0, unit = "pt"))
+label_plot <- ggplot() +
+  theme_void() +
+  labs(x = "Aggregated food categories") +
+  theme(plot.margin = margin(t = 0, r = 0, b = 75, l = 0, unit = "pt"),
+        axis.title.x = element_text(size = 10, family = "Avenir"))
 
 # Combine the plots using cowplot
 plot1 <- plot_grid(plot, label_plot, nrow = 2, rel_heights = c(0.9, 0.1))
@@ -549,7 +552,7 @@ forplot$Year <- as.numeric(forplot$Year)
 d <- melt(forplot, id.vars="Year")
 e <- head(d,-5)
 #plot
-ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color = variable)) +
+plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color = variable)) +
   #add connecting lines for the datapoints
   geom_line() +
   #make the plot points smaller
@@ -567,6 +570,86 @@ ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color = variabl
   #change axis count intervals
   scale_y_continuous(breaks = breaks_pretty(10)) +
   scale_x_continuous(breaks = breaks_pretty(15))
+
+ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 10, height = 8, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################Supplemental figure#########################
+
+
+# FAO data --------------------------------------------------------------------------------------------------------
+comm_bal_1 <- rbind(
+  read.csv(file.path("FoodBalanceSheets_E_All_Data.csv")) %>% mutate(Methodology="New"),
+  read.csv(file.path("FoodBalanceSheetsHistoric_E_All_Data.csv")) %>% mutate(Methodology="Old")
+) %>%
+  rename_with(~ gsub("[\\.]+", "", .x)) %>%
+  # remove duplicate eggs and milk totals, as they have the same Item text name as the individual items
+  filter(!(ItemCode %in% c(2948, 2949, 2899)), !(Item %in% c("Population", "Grand Total")),
+         Element %in% c("Domestic supply quantity", "Seed", "Processing", "Food", "Feed", "Production", 
+                        "Stock Variation", "Import Quantity", "Export Quantity", "Other uses (non-food)", 
+                        "Losses", "Residuals", "Food supply (kcal/capita/day)")
+  ) %>%
+  mutate(Value = as.numeric(Value),
+         Value = case_when(
+           Unit == "1000 tonnes" ~ Value / 1000,
+           Unit == "tonnes" ~ Value / 1000000,
+           T ~ Value),
+         Unit = if_else(Unit %in% c("1000 tonnes", "tonnes"), "Mt", Unit),
+         Year = as.integer(Year)
+  ) %>%
+  mutate(Item = case_when(
+    Item == "Groundnuts" ~ "Groundnuts (Shelled Eq)",
+    Item == "Rice (Milled Equivalent)" ~ "Rice and products",
+    TRUE ~ Item)) %>%
+  mutate(Value = if_else(Element == "stockVar" & Year <= 2009, -Value, Value)) # Different meaning of sign in new data
+
+# Milk --------------------------------------------------------------------------------------------------------
+
+p <- comm_bal_1 %>%
+  filter(Item=="Milk - Excluding Butter", Area == "World", Year %in% 2008:2018) %>%
+  filter(!(Element %in% c("Domestic supply quantity", "Food supply (kcal/capita/day)"))) %>%
+  ggplot(aes(x=Year, y=Value, colour=Methodology)) +
+  geom_line() +
+  geom_point(size=1) +
+  scale_x_continuous(breaks=seq(2008, 2018, 2)) +
+  scale_y_continuous(name="Quantity (Mt)") +
+  facet_wrap(. ~ Element) +
+  theme_classic() +
+  scale_colour_manual(values=c("Old"="red", "New"="darkgreen"), name="Dataset")
+
+p
+
+ggsave("~/Documents/PhD/Other/FBS comment/milk.png", p, width = 11, height = 6)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -866,85 +949,6 @@ test <- datcat %>%
 
 
 filter(datcat, Item == "Milk - Excluding Butter")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##################FIGURE 1, BLAND ALTMAN PLOT#################33
-
-
-blandr.output.text(dat$oldfoodavg, dat$newfoodavg, sig.level=0.95)
-blandr.draw( dat$oldfoodavg , dat$newfoodavg)
-blandr.draw( dat$oldfoodavg , dat$newfoodavg, plotter="rplot" )
-blandr.draw( dat$oldfoodavg , dat$newfoodavg, ciDisplay = FALSE)
-
-vignette.chart <- blandr.draw( dat$oldfoodavg , dat$newfoodavg )
-wright.stats <- blandr.statistics( dat$oldfoodavg , dat$newfoodavg )
-wright.plot <- blandr.plot.limits (wright.stats )
-vignette.chart.2 <- vignette.chart +
-  ggplot2::coord_cartesian(xlim=c( wright.plot$x_lower , wright.plot$x_upper ) , ylim=c( wright.plot$y_lower , wright.plot$y_upper ) ) +
-  xlab("Mean of new & old method (kg/capita/yr)") +
-  ylab("Difference of new & old method (kg/capita/yr)") +
-  ggtitle("") +
-  theme_classic()
-vignette.chart.2
-
-summary(wright.stats)
-
-
-
-
-
-#from scratch BA plot
-ggplot(dat, aes(x = avg, y = diff)) +
-  geom_point(alpha = 0.25, size = 1) +
-  geom_hline(yintercept = mean(dat$diff), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat$diff) - (1.96 * sd(dat$diff)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(dat$diff) + (1.96 * sd(dat$diff)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
-  xlab("Mean of new & old method (kg/capita/yr)") +
-  xlim(0, 375) +
-  ylim(-130, 200) +
-  theme_classic()
-
-
-cor.test(dat$oldfoodavg,dat$newfoodavg)
-
-
-#from scratch BA plot
-ggplot(datcat, aes(x = avg, y = diff)) +
-  geom_point(alpha = 0.25, size = 1) +
-  geom_hline(yintercept = mean(datcat$diff), linetype = "dashed", colour = "blue", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(datcat$diff) - (1.96 * sd(datcat$diff)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  geom_hline(yintercept = mean(datcat$diff) + (1.96 * sd(datcat$diff)), linetype = "dashed", colour = "red", size = 0.5, alpha = 0.6) +
-  ylab("Difference of new & old method (kg/capita/yr)") +
-  xlab("Mean of new & old method (kg/capita/yr)") +
-  xlim(0, 375) +
-  ylim(-130, 200) +
-  theme_classic()
-
-
-cor.test(datcat$oldfoodavg,datcat$newfoodavg)
-
-
-
-
 
 
 
