@@ -20,6 +20,7 @@ library(ggpattern)
 library(RColorBrewer)
 library(patchwork)
 library(tibble)
+library(forcats)
 
 
 
@@ -279,10 +280,10 @@ caption2 <- caption_grob("The red lines (y = 14.5kg & -13.3kg [left], y = 32.1kg
 # Add captions to the combined plot
 combined_plot_captions <- arrangeGrob(combined_plot, caption1, nullGrob(), caption2,
                                       nrow = 4, heights = unit.c(unit(1, "npc") -
-                                                                   unit(125, "pt"), #space from bottom
-                                                                 unit(20, "pt"), #row spacing
-                                                                 unit(6, "pt"), #space in between caption rows
-                                                                 unit(20, "pt"))) #space in between two captions
+                                                                   unit(100, "pt"), #space from bottom
+                                                                 unit(75, "pt"), #row spacing
+                                                                 unit(-30, "pt"), #space in between caption rows
+                                                                 unit(40, "pt"))) #space in between two captions
 
 # Print the combined plot with captions
 grid.newpage()
@@ -290,7 +291,7 @@ grid.draw(combined_plot_captions)
 
 
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot_captions, width = 10, height = 6, dpi = 300)
 
 
 blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
@@ -340,7 +341,7 @@ plot <- ggplot(test, aes(x = Item, y = meandiff, size = avgwt)) +
   theme(axis.text.x = element_blank(), legend.position = "right", text = element_text(family = "Avenir")) +
   scale_size_continuous(range = c(2, 12), 
                         breaks = c(25, 50, 75),
-                        labels = c("<25kg", "50kg", ">75kg"), 
+                        labels = c("25kg", "50kg", "75kg"), 
                         name = "Avg. Weight*", 
                         guide = guide_legend(title.position = "top", label.position = "left", title.hjust = 0.5, title.vjust = -0.2)) +
   guides(size = guide_legend(override.aes = list(color = "#C6DBEF", shape = 16), keywidth = 1.5, keyheight = 1.5)) # Override default shape and color of the legend
@@ -349,7 +350,7 @@ plot <- ggplot(test, aes(x = Item, y = meandiff, size = avgwt)) +
 x_labels <- paste(test$Item, collapse = " | ")
 plot <- plot + labs(x = NULL) +
   theme(plot.title = element_text(hjust = 0, size = 12, face = "bold", family = "Avenir"),
-        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, vjust = 1, family = "Avenir"),
+        axis.text.x = element_text(size = 11.8, angle = 45, hjust = 1, vjust = 1, family = "Avenir"),
         axis.title.x = element_blank(),
         axis.line.x = element_blank(),
         axis.ticks.x = element_blank(),
@@ -360,7 +361,7 @@ label_plot <- ggplot() +
   theme_void() +
   labs(x = "Aggregated food categories") +
   theme(plot.margin = margin(t = 0, r = 0, b = 75, l = 0, unit = "pt"),
-        axis.title.x = element_text(size = 10, family = "Avenir"))
+        axis.title.x = element_text(size = 12, family = "Avenir"))
 
 # Combine the plots using cowplot
 plot1 <- plot_grid(plot, label_plot, nrow = 2, rel_heights = c(0.9, 0.1))
@@ -421,11 +422,13 @@ dat_isag0 <- dat_isag0 %>%
 #stacked barplot
 
 # Subset the data
-subset_countries <- c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland", "Bangladesh", "Hungary")
+# choose countries that are largest by population in each world region,
+# in addition to the countries mentioned in the text as the extremes of the variables
+subset_countries <- c("United Arab Emirates", "United States of America", "India", "Brazil", "Germany", "China, mainland", "Bangladesh", "Hungary", "Indonesia", "Japan", "Nigeria")
 dat_isag0_subset <- dat_isag0 %>% filter(Area %in% subset_countries)
 
 # Rename countries
-dat_isag0_subset$Area <- recode(dat_isag0_subset$Area, `United Arab Emirates` = "UAE", `China, mainland` = "China")
+dat_isag0_subset$Area <- recode(dat_isag0_subset$Area, `United Arab Emirates` = "UAE", `China, mainland` = "China", `United States of America` = "USA")
 
 # Calculate average for each variable per country
 dat_isag0_avg <- dat_isag0_subset %>%
@@ -434,115 +437,81 @@ dat_isag0_avg <- dat_isag0_subset %>%
             smallchangeperc_avg = mean(smallchangeperc),
             nochangeperc_avg = mean(nochangeperc))
 
+print(dat_isag0_avg)
+
 # Reshape data for ggplot2
 dat_isag0_long <- pivot_longer(dat_isag0_avg, cols = c(largechangeperc_avg, smallchangeperc_avg, nochangeperc_avg), names_to = "Variable", values_to = "Value")
 
-brewer.pal(n = 9, name = "Blues")
 # Specify colors for each variable
-variable_colors <- c("largechangeperc_avg" = "#08306B", "smallchangeperc_avg" = "#C6DBEF", "nochangeperc_avg" = "#2171B5")
+variable_colors <- c("largechangeperc_avg" = "#08306B", "smallchangeperc_avg" = "#2171B5", "nochangeperc_avg" = "#C6DBEF")
 
 # Custom labeling function
 label_custom_percent <- function(x) {
   paste0(x * 100, "%")
 }
 
+# Reorder the factor levels of the 'Variable' column so that no change is on bottom
+dat_isag0_long$Variable <- fct_relevel(dat_isag0_long$Variable, "largechangeperc_avg", "smallchangeperc_avg", "nochangeperc_avg")
+
 # Create a stacked barplot
 plot <- ggplot(dat_isag0_long, aes(x = Area, y = Value, fill = Variable)) +
   geom_bar(stat = "identity", position = "stack", alpha = 1) +
-  scale_fill_manual(values = variable_colors, labels = c("Large Change", "Small Change", "No Change")) +
+  scale_fill_manual(values = variable_colors, labels = c("Large change", "Small change", "No change")) +
   scale_y_continuous(labels = label_custom_percent) +
-  labs(x = "Country", y = "Percentage of All Items") +
+  labs(x = "Country", y = "Percentage of all items") +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
-        axis.text.y = element_text(family = "Avenir"),
-        axis.title = element_text(family = "Avenir"),
-        legend.text = element_text(family = "Avenir"),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir", size = 12),
+        axis.text.y = element_text(family = "Avenir", size = 12),
+        axis.title.x = element_text(family = "Avenir", size = 12),
+        axis.title.y = element_text(family = "Avenir", size = 12),
+        legend.text = element_text(family = "Avenir", size = 12),
         legend.title = element_blank())
-
 
 print(plot)
 
+# Create a custom grob for the captions with text wrapping
+caption_grob <- function(caption_text) {
+  wrapped_text <- strwrap(caption_text, width = 200)
+  wrapped_text <- paste(wrapped_text, collapse = "\n")
+  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
+}
+
+# Combine the captions
+caption1 <- caption_grob("The horizontal dashed line in each plot is the mean percentage of items with no change or items with a large change, respectively, across all countries.")
+caption2 <- caption_grob("No change: old vs. new item value difference = 0; Small change: old vs. new item value difference <3.65kg/capita/yr; Large change: old vs. new item value difference >3.65kg/capita/yr.")
+caption3 <- caption_grob("Countries with the highest population within their world region were chosen (Brazil, China, Germany, India, Indonesia, Japan, Nigeria, USA), in addition to the countries mentioned in the text with the highest/lowest values for no change and large change (Hungary, UAE, Bangladesh).")
+
+# Add captions to the combined plot
+combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2, nullGrob(), caption3,
+                                      nrow = 6, heights = unit.c(unit(1, "npc") -
+                                                                   unit(125, "pt"), #space from bottom
+                                                                 unit(75, "pt"), #row spacing
+                                                                 unit(-10, "pt"), #space in between caption rows
+                                                                 unit(0, "pt"),   #space in between two captions
+                                                                 unit(25, "pt"), #space in between caption rows
+                                                                 unit(10, "pt"))) #space in between two captions
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Filter the dataset to include only the desired countries
-dat_filtered <- dat_isag0[dat_isag0$Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland", "Bangladesh", "Hungary"),]
-
-# Rename China, mainland and United Arab Emirates to China and UAE, respectively
-dat_filtered$Area <- gsub("China, mainland", "China", dat_filtered$Area)
-dat_filtered$Area <- gsub("United Arab Emirates", "UAE", dat_filtered$Area)
-
-# Reshape the data into a long format
-dat_long <- dat_filtered %>% pivot_longer(cols = c("nochangeperc", "largechangeperc"), names_to = "variable", values_to = "value")
-
-# Split the data into two separate data frames
-dat_nochange <- dat_long %>% filter(variable == "nochangeperc")
-dat_largechange <- dat_long %>% filter(variable == "largechangeperc")
-
-
-# Remove the first color from the "Blues" palette (it was too light, it wasn't really showing up, but i like the rest of the colors :])
-palette <- brewer.pal(n = length(unique(dat_long$Area)) + 1, name = "Blues")[-1]
-# Assign a color from the modified palette to each country
-country_colors <- setNames(palette, unique(dat_long$Area))
-
-
-plot1 <- ggplot(dat_nochange, aes(x = Area, y = value, fill = Area)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(values = country_colors) +
-  theme_classic() +
-  xlab("Country") +
-  ylab("Percentage of total items") +
-  ggtitle("No change") +
-  theme(plot.title = element_text(hjust = 0, family = "Avenir", size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
-        legend.position = "none",
-        text = element_text(family = "Avenir", size = 10)) +
-  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format()) +
-  geom_hline(yintercept = 0.224, linetype = "dashed", color = "black") +
-  annotate("text", x = Inf, y = 0.224, label = "mean % (22.4)", hjust = 4.1, vjust = -0.5, family = "Avenir", size = 3, color = "black")
-
-plot2 <- ggplot(dat_largechange, aes(x = Area, y = value, fill = Area)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(name = "Country", values = country_colors) +
-  theme_classic() +
-  xlab("Country") +
-  ylab("Percentage of total items") +
-  ggtitle("Large change (>3.65kg/capita/yr)") +
-  theme(plot.title = element_text(hjust = 0, family = "Avenir", size = 12),
-        axis.text.x = element_text(angle = 45, hjust = 1, family = "Avenir"),
-        text = element_text(family = "Avenir", size = 10)) +
-  scale_y_continuous(expand = c(0, 0.05), limits = c(0, 1), labels = scales::percent_format()) +
-  geom_hline(yintercept = 0.069, linetype = "dashed", color = "black") +
-  annotate("text", x = Inf, y = 0.069, label = "mean % (6.9)", hjust =3.5, vjust = -0.5, family = "Avenir", size = 3, color = "black")
-
-
-# Combine the plots using the patchwork package
-plot1 + plot2
-plot <- plot1 + plot2
+# Print the combined plot with captions
+grid.newpage()
+grid.draw(combined_plot_captions)
 
 
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 3 - no change & large change items by country.png", plot, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 3 - no change & large change items by country.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -659,29 +628,59 @@ forplot$Year <- as.numeric(forplot$Year)
 #convert to one-column long for graphing
 d <- melt(forplot, id.vars="Year")
 e <- head(d,-5)
-#plot
+#make zeh plot
+abbreviate_year <- function(year) {
+  if (is.na(year)) {
+    return(NA)
+  }
+  
+  year <- round(year)
+  if (year %% 100 == 0 || year == 1980) {
+    return(as.character(year))
+  } else {
+    return(sprintf("'%02d", year %% 100))
+  }
+}
 plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color = variable)) +
-  #add connecting lines for the datapoints
   geom_line() +
-  #make the plot points smaller
   geom_point(shape = 20, alpha = 0.05) +
-  #add label to the yaxis
   ylab("Meat supply (g/capita/day)") +
-  #set theme and font
   theme_classic(base_family = "Avenir") +
-  theme(axis.text.x = element_text(size=10, angle=45, vjust=0.5, family = "Avenir")) +
-  theme(axis.text.y = element_text(size=10, family = "Avenir")) +
-  #color the lines
+  theme(axis.text.x = element_text(size=12, angle=45, vjust=0.5, family = "Avenir")) +
+  theme(axis.text.y = element_text(size=12, family = "Avenir")) +
   scale_color_manual(name="Dataset",
                      labels=c("Old", "New", "Adjusted"),
                      values=c("#EF3B2C", "#41AE76", "#9ECAE1")) +
-  #change axis count intervals
   scale_y_continuous(breaks = breaks_pretty(10)) +
-  scale_x_continuous(breaks = breaks_pretty(15))
+  scale_x_continuous(breaks = breaks_pretty(15),
+                     labels = function(x) sapply(x, abbreviate_year))
 
-ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 10, height = 8, dpi = 300)
+print(plot)
 
+# Create a custom grob for the captions with text wrapping
+caption_grob <- function(caption_text) {
+  wrapped_text <- strwrap(caption_text, width = 200)
+  wrapped_text <- paste(wrapped_text, collapse = "\n")
+  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
+}
 
+# Combine the captions
+caption1 <- caption_grob("The values for Old and New are taken directly from the old and new FAO FBS methodologies, respectively.")
+caption2 <- caption_grob("The values for Adjusted are calculated by applying the mean offset ratio (MOR) of 0.945 (5.5% difference) to the Old data. MOR: New/Old value, averaged across the 4 years.")
+
+# Add captions to the combined plot
+combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2,
+                                      nrow = 4, heights = unit.c(unit(1, "npc") -
+                                                                   unit(125, "pt"), #space from bottom
+                                                                 unit(75, "pt"), #row spacing
+                                                                 unit(-10, "pt"), #space in between caption rows
+                                                                 unit(0, "pt"))) #space in between two captions
+
+# Print the combined plot with captions
+grid.newpage()
+grid.draw(combined_plot_captions)
+
+ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
 
 
 
@@ -744,257 +743,6 @@ p <- comm_bal_1 %>%
 p
 
 ggsave("~/Documents/PhD/Other/FBS comment/milk.png", p, width = 11, height = 6)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-################POTENTIAL FUTURE PLOTS, BUT NEED SOME WORK###################
-
-
-
-# Subset the dataset to the specified countries and categories
-dat_isag0_sub <- dat_isag0 %>%
-  filter(Area %in% c("United Arab Emirates", "Norway", "Canada", "Rwanda", "Germany", "China, mainland") &
-           category %in% c("milk - excluding butter", "cereals - excluding beer", "fruits - excluding wine",
-                           "sugar & sweeteners", "vegetables", "meat")) %>%
-  mutate(Area = recode(Area, "United Arab Emirates" = "UAE", "China, mainland" = "China"))
-
-# Create a new dataset to visualize the boxplots side by side
-dat_isag0_melt <- dat_isag0_sub %>%
-  pivot_longer(cols = c("oldfoodavg", "newfoodavg"), names_to = "type", values_to = "value")
-
-# Define colors for each country
-country_colors <- c("UAE" = "#FF0000", "Norway" = "#FFA500", "Canada" = "#FFFF00",
-                    "Rwanda" = "#008000", "Germany" = "#0000FF", "China" = "#4B0082")
-
-# Define light and dark colors for oldfoodavg and newfoodavg
-oldfoodavg_colors <- paste0(country_colors, "B3")
-newfoodavg_colors <- paste0(country_colors, "66")
-
-# Create the boxplot
-plot <- ggplot(dat_isag0_melt, aes(x = Area, y = value, fill = interaction(Area, type))) +
-  geom_boxplot(position = position_dodge(0.8)) +
-  facet_wrap(~category, scales = "free", ncol = 2) +
-  scale_fill_manual(values = c(oldfoodavg_colors, newfoodavg_colors)) +
-  labs(x = "Country", y = "Value") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Print the plot
-print(plot)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##############SANDBOX, come back to this later maybe##########
-
-
-
-
-
-
-
-
-
-
-
-
-#comparisons by country (across all item categories)
-test <- dat_isag1 %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-
-mean(dat_isag0$absdiff)
-mean(dat_isag1$absdiff)
-
-
-test <- dat_isag1 %>%
-  group_by(Item) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-
-cor(dat_isag1$absdiff,dat_isag1$Area)
-
-test <- dat_isag0 %>%
-  group_by(Item) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-
-
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    nochange = mean(nochange, na.rm=T))
-test <- dat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    largechange = mean(largechange, na.rm=T))
-test <- datcat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    nochange = mean(nochange, na.rm=T))
-test <- datcat %>%
-  group_by(Area) %>%
-  summarise(
-    n = n(),
-    largechange = mean(largechange, na.rm=T))
-
-#comparisons by item category (across all countries)
-test <- datcat %>%
-  group_by(Item) %>%
-  summarise(
-    n = n(),
-    meandiff = mean(absdiff, na.rm=T))
-test <- datcat %>%
-  group_by(Item) %>%
-  summarise(
-    n = n(),
-    nochange = mean(nochange, na.rm=T))
-test <- datcat %>%
-  group_by(Item) %>%
-  summarise(
-    n = n(),
-    largechange = mean(largechange, na.rm=T))
-
-
-filter(datcat, Item == "Milk - Excluding Butter")
-
-
-
-
-
 
 
 
