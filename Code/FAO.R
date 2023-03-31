@@ -477,19 +477,16 @@ caption_grob <- function(caption_text) {
 }
 
 # Combine the captions
-caption1 <- caption_grob("The horizontal dashed line in each plot is the mean percentage of items with no change or items with a large change, respectively, across all countries.")
-caption2 <- caption_grob("No change: old vs. new item value difference = 0; Small change: old vs. new item value difference <3.65kg/capita/yr; Large change: old vs. new item value difference >3.65kg/capita/yr.")
-caption3 <- caption_grob("Countries with the highest population within their world region were chosen (Brazil, China, Germany, India, Indonesia, Japan, Nigeria, USA), in addition to the countries mentioned in the text with the highest/lowest values for no change and large change (Hungary, UAE, Bangladesh).")
+caption1 <- caption_grob("No change: old vs. new item value difference = 0; Small change: old vs. new item value difference <3.65kg/capita/yr; Large change: old vs. new item value difference >3.65kg/capita/yr.")
+caption2 <- caption_grob("Countries with the highest population within their world region were chosen (Brazil, China, Germany, India, Indonesia, Japan, Nigeria, USA), in addition to the countries mentioned in the text with the highest/lowest values for no change and large change (Hungary, UAE, Bangladesh).")
 
 # Add captions to the combined plot
-combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2, nullGrob(), caption3,
-                                      nrow = 6, heights = unit.c(unit(1, "npc") -
+combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2,
+                                      nrow = 4, heights = unit.c(unit(1, "npc") -
                                                                    unit(125, "pt"), #space from bottom
                                                                  unit(75, "pt"), #row spacing
                                                                  unit(-10, "pt"), #space in between caption rows
-                                                                 unit(0, "pt"),   #space in between two captions
-                                                                 unit(25, "pt"), #space in between caption rows
-                                                                 unit(10, "pt"))) #space in between two captions
+                                                                 unit(0, "pt"))) #space in between two captions
 
 
 # Print the combined plot with captions
