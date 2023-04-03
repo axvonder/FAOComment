@@ -266,32 +266,8 @@ plot_isag0 <- rasterGrob(readPNG("plot_isag0.png"), interpolate = TRUE)
 plot_isag1 <- rasterGrob(readPNG("plot_isag1.png"), interpolate = TRUE)
 combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
 
-# Create a custom grob for the captions with text wrapping
-caption_grob <- function(caption_text) {
-  wrapped_text <- strwrap(caption_text, width = 200)
-  wrapped_text <- paste(wrapped_text, collapse = "\n")
-  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
-}
-
-# Combine the captions
-caption1 <- caption_grob("The blue line (y = 0.6kg [left], y = 1.4kg [right]) indicates the bias – or deviation – from 0.")
-caption2 <- caption_grob("The red lines (y = 14.5kg & -13.3kg [left], y = 32.1kg & -29.3kg [right]) indicate a confidence interval (CI) containing 95% of the differences between methods (a narrower CI indicates better agreement between methods).")
-
-# Add captions to the combined plot
-combined_plot_captions <- arrangeGrob(combined_plot, caption1, nullGrob(), caption2,
-                                      nrow = 4, heights = unit.c(unit(1, "npc") -
-                                                                   unit(100, "pt"), #space from bottom
-                                                                 unit(75, "pt"), #row spacing
-                                                                 unit(-30, "pt"), #space in between caption rows
-                                                                 unit(40, "pt"))) #space in between two captions
-
-# Print the combined plot with captions
-grid.newpage()
-grid.draw(combined_plot_captions)
-
-
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot_captions, width = 10, height = 6, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 6, dpi = 300)
 
 
 blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
@@ -366,31 +342,8 @@ label_plot <- ggplot() +
 # Combine the plots using cowplot
 plot1 <- plot_grid(plot, label_plot, nrow = 2, rel_heights = c(0.9, 0.1))
 
-# Create a custom grob for the captions with text wrapping
-caption_grob <- function(caption_text) {
-  wrapped_text <- strwrap(caption_text, width = 200)
-  wrapped_text <- paste(wrapped_text, collapse = "\n")
-  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
-}
-
-# Combine the captions
-caption1 <- caption_grob("* Average weight is calculated by taking the mean weight (kg/capita/yr) of each aggregated food category for years 2010–2013 across both the old and new FAO FBS datasets.")
-caption2 <- caption_grob("The horizontal dashed line is the mean absolute difference across all aggregated food categories.")
-
-# Add captions to the combined plot
-combined_plot_captions <- arrangeGrob(plot1, caption1, nullGrob(), caption2,
-                                      nrow = 4, heights = unit.c(unit(1, "npc") -
-                                                                   unit(75, "pt"), #space from bottom
-                                                                 unit(10, "pt"), #row spacing
-                                                                 unit(6, "pt"), #space in between caption rows
-                                                                 unit(20, "pt"))) #space in between two captions
-
-# Print the combined plot with captions
-grid.newpage()
-grid.draw(combined_plot_captions)
-
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 2 - Ag. food cats diff plot.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 2 - Ag. food cats diff plot.png", plot1, width = 10, height = 8, dpi = 300)
 
 
 
@@ -469,33 +422,8 @@ plot <- ggplot(dat_isag0_long, aes(x = Area, y = Value, fill = Variable)) +
 
 print(plot)
 
-# Create a custom grob for the captions with text wrapping
-caption_grob <- function(caption_text) {
-  wrapped_text <- strwrap(caption_text, width = 200)
-  wrapped_text <- paste(wrapped_text, collapse = "\n")
-  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
-}
-
-# Combine the captions
-caption1 <- caption_grob("No change: old vs. new item value difference = 0; Small change: old vs. new item value difference <3.65kg/capita/yr; Large change: old vs. new item value difference >3.65kg/capita/yr.")
-caption2 <- caption_grob("Countries with the highest population within their world region were chosen (Brazil, China, Germany, India, Indonesia, Japan, Nigeria, USA), in addition to the countries mentioned in the text with the highest/lowest values for no change and large change (Hungary, UAE, Bangladesh).")
-
-# Add captions to the combined plot
-combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2,
-                                      nrow = 4, heights = unit.c(unit(1, "npc") -
-                                                                   unit(125, "pt"), #space from bottom
-                                                                 unit(75, "pt"), #row spacing
-                                                                 unit(-10, "pt"), #space in between caption rows
-                                                                 unit(0, "pt"))) #space in between two captions
-
-
-# Print the combined plot with captions
-grid.newpage()
-grid.draw(combined_plot_captions)
-
-
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 3 - no change & large change items by country.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 3 - no change & large change items by country.png", plot, width = 10, height = 8, dpi = 300)
 
 
 
@@ -654,30 +582,7 @@ plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color =
 
 print(plot)
 
-# Create a custom grob for the captions with text wrapping
-caption_grob <- function(caption_text) {
-  wrapped_text <- strwrap(caption_text, width = 200)
-  wrapped_text <- paste(wrapped_text, collapse = "\n")
-  textGrob(label = wrapped_text, x = 0, hjust = 0, gp = gpar(fontsize = 8, fontfamily = "Avenir"))
-}
-
-# Combine the captions
-caption1 <- caption_grob("The values for Old and New are taken directly from the old and new FAO FBS methodologies, respectively.")
-caption2 <- caption_grob("The values for Adjusted are calculated by applying the mean offset ratio (MOR) of 0.945 (5.5% difference) to the Old data. MOR: New/Old value, averaged across the 4 years.")
-
-# Add captions to the combined plot
-combined_plot_captions <- arrangeGrob(plot, caption1, nullGrob(), caption2,
-                                      nrow = 4, heights = unit.c(unit(1, "npc") -
-                                                                   unit(125, "pt"), #space from bottom
-                                                                 unit(75, "pt"), #row spacing
-                                                                 unit(-10, "pt"), #space in between caption rows
-                                                                 unit(0, "pt"))) #space in between two captions
-
-# Print the combined plot with captions
-grid.newpage()
-grid.draw(combined_plot_captions)
-
-ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", combined_plot_captions, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 10, height = 8, dpi = 300)
 
 
 
@@ -699,8 +604,8 @@ ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-20
 
 # FAO data --------------------------------------------------------------------------------------------------------
 comm_bal_1 <- rbind(
-  read.csv(file.path("FoodBalanceSheets_E_All_Data.csv")) %>% mutate(Methodology="New"),
-  read.csv(file.path("FoodBalanceSheetsHistoric_E_All_Data.csv")) %>% mutate(Methodology="Old")
+  read.csv(file.path("FoodBalanceSheets_E_All_Data_Norm.csv")) %>% mutate(Methodology="New"),
+  read.csv(file.path("FoodBalanceSheetsHistoric_E_All_Data_Norm.csv")) %>% mutate(Methodology="Old")
 ) %>%
   rename_with(~ gsub("[\\.]+", "", .x)) %>%
   # remove duplicate eggs and milk totals, as they have the same Item text name as the individual items
