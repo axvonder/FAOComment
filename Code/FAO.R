@@ -597,8 +597,6 @@ ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-20
 
 
 
-
-
 ##########################Supplemental figure#########################
 
 
@@ -646,6 +644,26 @@ p
 
 ggsave("~/Documents/PhD/Other/FBS comment/milk.png", p, width = 11, height = 6)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#########################SI TABLE 1##############################
+
+# all items, excluding aggregated food categories
+# 
 
 
 
