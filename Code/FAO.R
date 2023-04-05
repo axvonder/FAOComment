@@ -21,8 +21,14 @@ library(RColorBrewer)
 library(patchwork)
 library(tibble)
 library(forcats)
+library(officer)
+library(flextable)
 
 
+# you will need to download the appropriate FAO datasets.
+# for this code, we downloaded the data of each aggregated food category separately
+# this allowed for the assignation of the food categories to all the individual items
+# for analysis by aggregated food category
 
 # function to read in data
 transfunc <- function(file_path, catname, col_prefix) {
@@ -220,6 +226,59 @@ dat <- mergedfinal
 # Split the dataset
 dat_isag0 <- dat[dat$isag == 0, ]
 dat_isag1 <- dat[dat$isag == 1, ]
+
+#calculate MOR and CV
+
+#MOR - all items no ag food cats
+# Create a new variable "MOR" and set it to 0
+dat_isag0$MOR <- 0
+
+# Calculate the ratio for each year and row-wise average
+ratio_matrix <- dat_isag0[, c("Y2010old", "Y2010new", "Y2011old", "Y2011new", "Y2012old", "Y2012new", "Y2013old", "Y2013new")]
+ratio_matrix <- t(apply(ratio_matrix, 1, function(x) ifelse(x[c(TRUE, FALSE)] != 0, x[c(FALSE, TRUE)] / x[c(TRUE, FALSE)], NA)))
+dat_isag0$MOR <- rowMeans(ratio_matrix, na.rm = TRUE)
+#check the mean MOR across all items (no ag food cats)
+mean(dat_isag0$MOR, na.rm = TRUE) #1.49 (new items are, on average, 49% higher)
+
+#MOR - ag food cats
+# Create a new variable "MOR" and set it to 0
+dat_isag1$MOR <- 0
+
+# Calculate the ratio for each year and row-wise average
+ratio_matrix <- dat_isag1[, c("Y2010old", "Y2010new", "Y2011old", "Y2011new", "Y2012old", "Y2012new", "Y2013old", "Y2013new")]
+ratio_matrix <- t(apply(ratio_matrix, 1, function(x) ifelse(x[c(TRUE, FALSE)] != 0, x[c(FALSE, TRUE)] / x[c(TRUE, FALSE)], NA)))
+dat_isag1$MOR <- rowMeans(ratio_matrix, na.rm = TRUE)
+#check the mean MOR across all ag food cats
+mean(dat_isag1$MOR, na.rm = TRUE) #2.74 (new items are, on average, 274% higher)
+
+#CV - all items no ag food cats
+#CV -  ag food cats
+# calculate the ratio columns
+dat_isag0$Y2010ratio <- dat_isag0$Y2010new / dat_isag0$Y2010old
+dat_isag0$Y2011ratio <- dat_isag0$Y2011new / dat_isag0$Y2011old
+dat_isag0$Y2012ratio <- dat_isag0$Y2012new / dat_isag0$Y2012old
+dat_isag0$Y2013ratio <- dat_isag0$Y2013new / dat_isag0$Y2013old
+# Calculate standard deviation of specified columns
+sd <- apply(dat_isag0[, c("Y2010ratio", "Y2011ratio", "Y2012ratio", "Y2013ratio")], 1, sd)
+# Add new column with standard deviation values to the dataframe
+dat_isag0$sd <- sd
+#add cv variable
+dat_isag0$cv <- (dat_isag0$sd/dat_isag0$MOR)*100
+
+
+#CV -  ag food cats
+# calculate the ratio columns
+dat_isag1$Y2010ratio <- dat_isag1$Y2010new / dat_isag1$Y2010old
+dat_isag1$Y2011ratio <- dat_isag1$Y2011new / dat_isag1$Y2011old
+dat_isag1$Y2012ratio <- dat_isag1$Y2012new / dat_isag1$Y2012old
+dat_isag1$Y2013ratio <- dat_isag1$Y2013new / dat_isag1$Y2013old
+# Calculate standard deviation of specified columns
+sd <- apply(dat_isag1[, c("Y2010ratio", "Y2011ratio", "Y2012ratio", "Y2013ratio")], 1, sd)
+# Add new column with standard deviation values to the dataframe
+dat_isag1$sd <- sd
+#add cv variable
+dat_isag1$cv <- (dat_isag1$sd/dat_isag1$MOR)*100
+
 
 
 
@@ -662,8 +721,69 @@ ggsave("~/Documents/PhD/Other/FBS comment/milk.png", p, width = 11, height = 6)
 
 #########################SI TABLE 1##############################
 
-# all items, excluding aggregated food categories
-# 
+# ag food cats, cols: abs diff, MOR, CV
+# calculate averages by category
+df_avg <- dat_isag1 %>%
+  group_by(category) %>%
+  summarize(oldfoodavg = mean(oldfoodavg, na.rm = TRUE),
+            newfoodavg = mean(newfoodavg, na.rm = TRUE),
+            absdiff = mean(absdiff, na.rm = TRUE),
+            MOR = mean(MOR, na.rm = TRUE),
+            cv = mean(cv, na.rm = TRUE))
+
+# view resulting table
+df_avg
+#round data to 2 decimals
+df_avg[,2:ncol(df_avg)] <- round(df_avg[,2:ncol(df_avg)], 2)
+# Create a flextable object from the df_avg data frame
+ft <- flextable(df_avg)
+# Set table style with horizontal and vertical lines
+ft <- border_outer(ft, border = fp_border(color = "black", width = 1))
+ft <- border_inner_h(ft, border = fp_border(color = "black", width = 1))
+ft <- border_inner_v(ft, border = fp_border(color = "black", width = 1))
+# Add table caption
+ft <- set_caption(ft, "Averages by Category")
+# Write table to Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+# Save the output to the "FAO" folder on your desktop
+output_path <- file.path("~/Desktop/FAO/output_table.docx")
+print(doc, target = output_path)
+
+
+
+###########################SI TABLE 2##################################
+
+# calculate averages by category
+df_avg <- dat_isag0 %>%
+  group_by(Area) %>%
+  summarize(nochangeperc = mean(nochangeperc*100, na.rm = TRUE),
+            largechangeperc = mean(largechangeperc*100, na.rm = TRUE),
+            smallchangeperc = mean(smallchangeperc*100, na.rm = TRUE))
+
+# round the numerical columns except for the "Area" column to 1 decimal place
+df_avg[, 2:ncol(df_avg)] <- round(df_avg[, 2:ncol(df_avg)], 1)
+
+# view resulting table
+df_avg
+
+
+# Create a flextable object from the df_avg data frame
+ft <- flextable(df_avg)
+# Set table style with horizontal and vertical lines
+ft <- border_outer(ft, border = fp_border(color = "black", width = 1))
+ft <- border_inner_h(ft, border = fp_border(color = "black", width = 1))
+ft <- border_inner_v(ft, border = fp_border(color = "black", width = 1))
+# Add table caption
+ft <- set_caption(ft, "Averages by Country")
+# Write table to Word document
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+# Save the output to the "FAO" folder on your desktop
+output_path <- file.path("~/Desktop/FAO/output_table.docx")
+print(doc, target = output_path)
+
+
 
 
 
