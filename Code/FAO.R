@@ -440,7 +440,7 @@ dat_isag0 <- dat_isag0 %>%
 # Subset the data
 # choose countries that are largest by population in each world region,
 # in addition to the countries mentioned in the text as the extremes of the variables
-subset_countries <- c("United Arab Emirates", "United States of America", "India", "Brazil", "Germany", "China, mainland", "Bangladesh", "Hungary", "Indonesia", "Japan", "Nigeria")
+subset_countries <- c("United Arab Emirates", "United States of America", "India", "Brazil", "Germany", "China, mainland", "Bangladesh", "Indonesia", "Japan", "Nigeria")
 dat_isag0_subset <- dat_isag0 %>% filter(Area %in% subset_countries)
 
 # Rename countries
