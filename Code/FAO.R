@@ -1,5 +1,5 @@
 #setwd and load packages
-setwd("~/Desktop/Data")
+setwd("~/Desktop/PhD/FAO/Data")
 library(tidyverse)
 library(dplyr)
 library(tidyr)
@@ -115,6 +115,7 @@ table(dat$nochange)
 
 
 
+subset_dat <- subset(dat, Area == "United Kingdom of Great Britain and Northern Ireland" & category == "meat")
 
 
 
@@ -302,7 +303,7 @@ plot_isag0 <- ggplot(dat_isag0, aes(x = avg, y = diff)) +
   ylim(-130, 200) +
   theme_classic() +
   ggtitle("Individual items") +
-  theme(text = element_text(family = "Avenir"))
+  theme(text = element_text(family = "Times"))
 
 plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
   geom_point(alpha = 0.25, size = 1) +
@@ -315,7 +316,7 @@ plot_isag1 <- ggplot(dat_isag1, aes(x = avg, y = diff)) +
   ylim(-130, 200) +
   theme_classic() +
   ggtitle("Aggregated item categories") +
-  theme(text = element_text(family = "Avenir"))
+  theme(text = element_text(family = "Times"))
 
 # Set the width for the saved plot
 width <- 5
@@ -330,7 +331,7 @@ plot_isag1 <- rasterGrob(readPNG("plot_isag1.png"), interpolate = TRUE)
 combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
 
 # Save the plot to a folder on your Desktop called "FAO"
-ggsave("~/Desktop/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 6, dpi = 300)
+ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 6, dpi = 300)
 
 
 blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
@@ -630,12 +631,12 @@ abbreviate_year <- function(year) {
   }
 }
 plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color = variable)) +
-  geom_line() +
+  geom_line(size = 1) +
   geom_point(shape = 20, alpha = 0.05) +
   ylab("Meat supply (g/capita/day)") +
-  theme_classic(base_family = "Avenir") +
-  theme(axis.text.x = element_text(size=12, angle=45, vjust=0.5, family = "Avenir")) +
-  theme(axis.text.y = element_text(size=12, family = "Avenir")) +
+  theme_classic(base_family = "Times") +
+  theme(axis.text.x = element_text(size=12, angle=45, vjust=0.5, family = "Times")) +
+  theme(axis.text.y = element_text(size=12, family = "Times")) +
   scale_color_manual(name="Dataset",
                      labels=c("Old", "New", "Adjusted"),
                      values=c("#EF3B2C", "#41AE76", "#9ECAE1")) +
@@ -645,7 +646,7 @@ plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color =
 
 print(plot)
 
-ggsave("~/Desktop/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 10, height = 8, dpi = 300)
+ggsave("~/Desktop/PhD/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 8, height = 6, dpi = 300)
 
 
 
