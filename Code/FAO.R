@@ -332,6 +332,7 @@ combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
 
 # Save the plot to a folder on your Desktop called "FAO"
 ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 6, dpi = 300)
+ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot PDF.pdf", combined_plot, width = 10, height = 6, device = "pdf")
 
 
 blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
@@ -647,7 +648,7 @@ plot <- ggplot(data=na.omit(e), aes(x=Year, y = value, group = variable, color =
 print(plot)
 
 ggsave("~/Desktop/PhD/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 8, height = 6, dpi = 300)
-
+ggsave("~/Desktop/PhD/FAO/Figure 2 - UK meat supply, adjusted and unadjusted 1980-2018 PDF.pdf", plot, width = 8, height = 6, device = "pdf")
 
 
 
