@@ -325,6 +325,9 @@ width <- 5
 ggsave("plot_isag0.png", plot = plot_isag0, width = width, height = 5, dpi = 300)
 ggsave("plot_isag1.png", plot = plot_isag1, width = width, height = 5, dpi = 300)
 
+ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot EPSplt1.pdf", plot_isag0, width = 5, height = 5, device = "pdf")
+ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot EPSplt2.pdf", plot_isag1, width = 5, height = 5, device = "pdf")
+
 # Combine the saved plots side by side
 plot_isag0 <- rasterGrob(readPNG("plot_isag0.png"), interpolate = TRUE)
 plot_isag1 <- rasterGrob(readPNG("plot_isag1.png"), interpolate = TRUE)
@@ -333,7 +336,7 @@ combined_plot <- grid.arrange(plot_isag0, plot_isag1, ncol = 2)
 # Save the plot to a folder on your Desktop called "FAO"
 ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot.png", combined_plot, width = 10, height = 6, dpi = 300)
 ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot PDF.pdf", combined_plot, width = 10, height = 6, device = "pdf")
-
+ggsave("~/Desktop/PhD/FAO/Figure 1 - Combined BA plot EPS.eps", combined_plot, width = 10, height = 6, device = "eps")
 
 blandr.statistics(dat_isag1$oldfoodavg, dat_isag1$newfoodavg, sig.level = 0.95)
 
@@ -649,13 +652,7 @@ print(plot)
 
 ggsave("~/Desktop/PhD/FAO/Figure 4 - UK meat supply, adjusted and unadjusted 1980-2018.png", plot, width = 8, height = 6, dpi = 300)
 ggsave("~/Desktop/PhD/FAO/Figure 2 - UK meat supply, adjusted and unadjusted 1980-2018 PDF.pdf", plot, width = 8, height = 6, device = "pdf")
-
-
-
-
-
-
-
+ggsave("~/Desktop/PhD/FAO/Figure 2 - UK meat supply, adjusted and unadjusted 1980-2018 EPS.eps", plot, width = 8, height = 6, device = "eps")
 
 
 
